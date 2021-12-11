@@ -13,6 +13,10 @@
 /* Width and height of out image */
 #define WIDTH 800
 #define HEIGHT 600
+#define AREA 4800
+
+unsigned char img[3 * WIDTH * HEIGHT];
+int drawn = 0;
 
 /* The vector structure */
 typedef struct {
@@ -159,11 +163,16 @@ void saveppm(char * filename, unsigned char * img, int width, int height) {
   fclose(f);
 }
 
-int main(int argc, char * argv[]) {
-
-  ray r;
 
   material materials[3];
+
+  light lights[3];
+
+  sphere spheres[3];
+
+
+void init(){
+
   materials[0].diffuse.red = 1;
   materials[0].diffuse.green = 0;
   materials[0].diffuse.blue = 0;
@@ -179,7 +188,6 @@ int main(int argc, char * argv[]) {
   materials[2].diffuse.blue = 1;
   materials[2].reflection = 0.9;
 
-  sphere spheres[3];
   spheres[0].pos.x = 200;
   spheres[0].pos.y = 300;
   spheres[0].pos.z = 0;
@@ -198,7 +206,6 @@ int main(int argc, char * argv[]) {
   spheres[2].radius = 100;
   spheres[2].material = 2;
 
-  light lights[3];
 
   lights[0].pos.x = 0;
   lights[0].pos.y = 240;
@@ -221,11 +228,19 @@ int main(int argc, char * argv[]) {
   lights[2].intensity.green = 0.5;
   lights[2].intensity.blue = 1;
 
-  /* Will contain the raw image */
-  unsigned char img[3 * WIDTH * HEIGHT];
+}
 
+
+
+void* threadstuff( void* n){
+
+  ray r;
+
+  int pos = *(int*)n;
+  printf("hello position %d", pos);
   int x, y;
-  for (y = 0; y < HEIGHT; y++) {
+
+  for (y = 0+pos; y < HEIGHT/2+pos; y++) {
     for (x = 0; x < WIDTH; x++) {
 
       float red = 0;
@@ -306,6 +321,29 @@ int main(int argc, char * argv[]) {
       img[(x + y * WIDTH) * 3 + 2] = (unsigned char) min(blue * 255.0f, 255.0f);
     }
   }
+
+
+}
+
+pthread_t threads[2];
+
+int main(int argc, char * argv[]) {
+
+
+  int ind[] = {0,300};
+
+  init();
+
+
+  for(int i = 0; i < 2; i++){
+    pthread_create(&threads[i], NULL, (void*)&threadstuff, (void*)&ind[i]);
+  }
+
+  /* Will contain the raw image */
+ for(int i = 0; i < 2; i++){
+   pthread_join(threads[i], NULL);
+ } 
+  
 
   saveppm("image.ppm", img, WIDTH, HEIGHT);
 
