@@ -13,16 +13,27 @@
 /* Width and height of out image */
 #define WIDTH 800
 #define HEIGHT 600
-#define AREA 4800
+#define AREA WIDTH*HEIGHT
 
-unsigned char img[3 * WIDTH * HEIGHT];
+
+int thread_number = 1;
+
 int drawn = 0;
+pthread_mutex_t writeflag;
 
 /* The vector structure */
 typedef struct {
   float x, y, z;
 }
 vector;
+
+typedef struct 
+{
+  int position;
+  unsigned char* outarr;
+}
+th_input;
+
 
 /* The sphere */
 typedef struct {
@@ -232,15 +243,16 @@ void init(){
 
 
 
-void* threadstuff( void* n){
+void* threadstuff( void* data){
 
   ray r;
 
-  int pos = *(int*)n;
-  printf("hello position %d", pos);
+  th_input th_data = *(th_input*)data;
+
+  
   int x, y;
 
-  for (y = 0+pos; y < HEIGHT/2+pos; y++) {
+  for (y = 0+th_data.position; y < HEIGHT/thread_number+th_data.position; y++) {
     for (x = 0; x < WIDTH; x++) {
 
       float red = 0;
@@ -316,36 +328,67 @@ void* threadstuff( void* n){
 
       } while ((coef > 0.0f) && (level < 15));
 
-      img[(x + y * WIDTH) * 3 + 0] = (unsigned char) min(red * 255.0f, 255.0f);
-      img[(x + y * WIDTH) * 3 + 1] = (unsigned char) min(green * 255.0f, 255.0f);
-      img[(x + y * WIDTH) * 3 + 2] = (unsigned char) min(blue * 255.0f, 255.0f);
+      
+      th_data.outarr[(x + y * WIDTH) * 3 + 0] = (unsigned char) min(red * 255.0f, 255.0f);
+      th_data.outarr[(x + y * WIDTH) * 3 + 1] = (unsigned char) min(green * 255.0f, 255.0f);
+      th_data.outarr[(x + y * WIDTH) * 3 + 2] = (unsigned char) min(blue * 255.0f, 255.0f);
+
+      // here I lock mutex to be sure that no more than 1 thread will access and write to shared variable
+
+      pthread_mutex_lock(&writeflag);
+      drawn++;
+      pthread_mutex_unlock(&writeflag);
+
     }
   }
 
 
 }
 
-pthread_t threads[2];
+
 
 int main(int argc, char * argv[]) {
 
 
-  int ind[] = {0,300};
+  unsigned char imgout[3 * WIDTH * HEIGHT];
+
+  printf("How many threads you would like to use? Number must divide %d without decimals\n", HEIGHT);
+  scanf("%d", &thread_number);
+
+  if(HEIGHT%thread_number != 0){
+    printf("You failed the input chalenge, You are not worthy user, programm will be executed with 1 thread");
+    thread_number = 1;
+  }
+
+  th_input th_data_array[thread_number];
+
+  pthread_t threads[thread_number];
 
   init();
+  pthread_mutex_init(&writeflag, NULL);
+for(int i = 0; i < thread_number; i++){
+  th_data_array[i].outarr = imgout;
+  th_data_array[i].position = i*HEIGHT/thread_number;
+}
 
+for(int i = 0; i < thread_number; i++){
+  printf("thread number: %d, starts from position %d\n", i+1, th_data_array[i].position);
+}
 
-  for(int i = 0; i < 2; i++){
-    pthread_create(&threads[i], NULL, (void*)&threadstuff, (void*)&ind[i]);
+  for(int i = 0; i < thread_number; i++){
+    pthread_create(&threads[i], NULL, (void*)&threadstuff, (void*)&th_data_array[i]);
   }
 
   /* Will contain the raw image */
- for(int i = 0; i < 2; i++){
+ for(int i = 0; i < thread_number; i++){
    pthread_join(threads[i], NULL);
  } 
   
+  pthread_mutex_destroy(&writeflag);
+  
+  printf("area: %d, counter: %d",AREA , drawn);
 
-  saveppm("image.ppm", img, WIDTH, HEIGHT);
+  saveppm("image.ppm", imgout, WIDTH, HEIGHT);
 
   return 0;
 }
