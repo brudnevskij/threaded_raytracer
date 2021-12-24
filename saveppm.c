@@ -1,7 +1,7 @@
 #include "functions.h"
 
 
-
+// Saves array to file
 void saveppm(char * filename, unsigned char * img, int width, int height) {
   /* FILE pointer */
   FILE * f;

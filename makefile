@@ -5,6 +5,7 @@ OUT	= runme
 CC	 = gcc
 FLAGS	 = -g -c -Wall
 LFLAGS	 = -lpthread -lm
+IMG = image.ppm
 
 all: $(OBJS)
 	$(CC) -g $(OBJS) -o $(OUT) $(LFLAGS)
@@ -27,4 +28,4 @@ vector_operations.o: vector_operations.c
 
 
 clean:
-	rm -f  $(OUT)
+	rm -f  $(OUT) $(IMG)

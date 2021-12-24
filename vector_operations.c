@@ -1,8 +1,5 @@
 #include "functions.h"
 
-
-
-
 /* Subtract two vectors and return the resulting vector */
 vector vectorSub(vector * v1, vector * v2) {
   vector result = {

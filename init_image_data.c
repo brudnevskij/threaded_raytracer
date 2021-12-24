@@ -1,6 +1,6 @@
 #include "functions.h"
 
-
+// fills structs with data for further usage
 
 void init(){
 

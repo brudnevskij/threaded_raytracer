@@ -16,12 +16,13 @@
 
 
 
-
+// The vector 
 typedef struct {
   float x, y, z;
 }
 vector;
 
+// Input for thread
 typedef struct 
 {
   int position;
@@ -65,6 +66,8 @@ typedef struct {
 }
 light;
 
+//links to global variables
+
 extern material materials[3];
 extern light lights[3];
 extern sphere spheres[3];
@@ -73,6 +76,7 @@ extern int thread_number;
 extern int pixelcount ;
 extern pthread_mutex_t writeflag;
 
+// functions
 vector vectorSub(vector*, vector*);
 float vectorDot(vector*, vector*); 
 vector vectorScale(float, vector*);

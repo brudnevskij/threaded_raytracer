@@ -1,6 +1,6 @@
 #include "functions.h"
 
-
+// function that will be passed to thread
 
 void threadstuff( void* data){
 
