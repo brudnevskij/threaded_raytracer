@@ -1,4 +1,4 @@
 test
 .vscode
 image.ppm
-tasks.json
+*.json
